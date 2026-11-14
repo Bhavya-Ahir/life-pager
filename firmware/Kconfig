@@ -1,0 +1,35 @@
+mainmenu "Life Pager"
+
+config PAGER_LTE
+	bool "Enable the LTE-M away link (nRF9151 Serial Modem on uart0)"
+	default y
+
+config PAGER_AWAY_DELAY_S
+	int "Seconds without the phone before LTE is switched on"
+	default 60
+
+config PAGER_MQTT_HOST
+	string "MQTT broker host name"
+	default "broker.example.com"
+
+config PAGER_MQTT_PORT
+	int "MQTT broker TLS port"
+	default 8883
+
+config PAGER_MQTT_USER
+	string "MQTT user name"
+	default "pager1"
+
+config PAGER_MQTT_PASS
+	string "MQTT password (set it in a private conf file, see firmware/README.md)"
+	default ""
+
+config PAGER_MQTT_SEC_TAG
+	int "Modem security tag holding the broker's CA certificate"
+	default 4242
+
+config PAGER_ID
+	string "Pager id used in MQTT topics"
+	default "pager1"
+
+source "Kconfig.zephyr"

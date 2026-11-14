@@ -1,0 +1,110 @@
+# Life Pager Rev A - single source of truth for the circuit.
+# `python3 hardware/tools/build.py` checks it and regenerates bom.csv + schematic.svg.
+#
+# pins:   every electrical pin the part exposes that this design cares about
+# nc:     pins deliberately left unconnected
+# verify: something to confirm on the bench before trusting the connection
+
+parts:
+  U1:
+    name: Seeed Studio XIAO nRF52840 (non-Sense)
+    role: MCU, Bluetooth LE, USB-C, LiPo charger (BQ25101)
+    qty: 1
+    source: Seeed 102010448
+    cost_usd: 9.9
+    pins: [5V, GND, 3V3, D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, BAT+, BAT-, NFC1]
+    nc: [5V]
+    gpio: {D0: P0.02, D1: P0.03, D2: P0.28, D3: P0.29, D4: P0.04, D5: P0.05, D6: P1.11,
+           D7: P1.12, D8: P1.13, D9: P1.14, D10: P1.15, NFC1: P0.09}
+    verify: BAT+/BAT-/NFC1 are pads on the underside. On-board (no wiring needed) battery
+      sense is P0.31 through a divider enabled by P0.14 low; P0.13 low selects 100 mA charge.
+
+  U2:
+    name: Makerdiary nRF9151 Connect Kit
+    role: LTE-M / NB-IoT modem running Nordic Serial Modem firmware
+    qty: 1
+    source: makerdiary.com
+    cost_usd: 39.9
+    pins: [VBAT, GND, P0.02, P0.03, P0.06, P0.07]
+    gpio: {P0.02: UART TX (modem out), P0.03: UART RX (modem in), P0.06: DTR (in), P0.07: RI (out)}
+    verify: Set the kit's I/O voltage to 3.3 V (it can be 1.8 V) and measure it before wiring
+      to U1. Confirm these four GPIOs are free on the header in the kit's pinout PDF; if not,
+      pick any free GPIOs and change firmware/modem/pager_modem.overlay to match.
+
+  DS1:
+    name: Adafruit Sharp Memory Display 1.3" 168x144 (LS013B7DH05)
+    role: always-on reflective display
+    qty: 1
+    source: Adafruit 3502
+    cost_usd: 24.95
+    pins: [VIN, 3V3, GND, CLK, DI, CS, EMD, DISP, EIN]
+    nc: [3V3]
+    verify: 3V3 is the breakout regulator OUTPUT - leave it open.
+
+  BT1:
+    name: LiPo 3.7 V 602050 with protection circuit, about 650 mAh
+    role: battery
+    qty: 1
+    source: generic
+    cost_usd: 7.0
+    pins: ["+", "-"]
+
+  SW1: {name: Tact switch 6x6x4.3 mm THT, role: UP, qty: 1, source: generic, cost_usd: 0.1, pins: [A, B]}
+  SW2: {name: Tact switch 6x6x4.3 mm THT, role: SELECT, qty: 1, source: generic, cost_usd: 0.1, pins: [A, B]}
+  SW3: {name: Tact switch 6x6x4.3 mm THT, role: DOWN, qty: 1, source: generic, cost_usd: 0.1, pins: [A, B]}
+
+  M1: {name: Coin vibration motor 10x2.7 mm 3 V, role: haptic alert, qty: 1, source: generic,
+       cost_usd: 1.0, pins: ["+", "-"]}
+  Q1: {name: AO3400A N-MOSFET SOT-23, role: motor low-side switch, qty: 1, source: generic,
+       cost_usd: 0.1, pins: [G, D, S]}
+  D1: {name: 1N5819 Schottky, role: motor flyback, qty: 1, source: generic, cost_usd: 0.05, pins: [A, K]}
+  R1: {name: 100R resistor, role: Q1 gate series, qty: 1, source: generic, cost_usd: 0.01, pins: ["1", "2"]}
+  R2: {name: 100k resistor, role: Q1 gate pull-down, qty: 1, source: generic, cost_usd: 0.01, pins: ["1", "2"]}
+
+  Q2: {name: AO3401A P-MOSFET SOT-23, role: modem high-side power switch, qty: 1, source: generic,
+       cost_usd: 0.1, pins: [G, D, S]}
+  Q3: {name: 2N7002 N-MOSFET SOT-23, role: level shift for Q2 gate, qty: 1, source: generic,
+       cost_usd: 0.05, pins: [G, D, S]}
+  R3: {name: 100k resistor, role: Q2 gate pull-up (modem off by default), qty: 1, source: generic,
+       cost_usd: 0.01, pins: ["1", "2"]}
+  R4: {name: 100k resistor, role: Q3 gate pull-down, qty: 1, source: generic, cost_usd: 0.01, pins: ["1", "2"]}
+  C1: {name: 100n ceramic capacitor, role: Q2 soft start (limits inrush into the kit), qty: 1,
+       source: generic, cost_usd: 0.02, pins: ["1", "2"]}
+  R7: {name: 10k resistor, role: "Q2 gate series (with C1 gives ~1 ms turn-on ramp)", qty: 1, source: generic,
+       cost_usd: 0.01, pins: ["1", "2"]}
+  R5: {name: 1k resistor, role: series protection on UART TX into modem, qty: 1, source: generic,
+       cost_usd: 0.01, pins: ["1", "2"]}
+  R6: {name: 1k resistor, role: series protection on DTR into modem, qty: 1, source: generic,
+       cost_usd: 0.01, pins: ["1", "2"]}
+
+extras:   # no electrical nets in this file, but you need them
+  - {name: LTE flex antenna with U.FL (ships with the Connect Kit), qty: 1, cost_usd: 0}
+  - {name: Nano SIM with LTE-M data (1NCE or Hologram), qty: 1, cost_usd: 15}
+  - {name: Perfboard 2.54 mm - one 13x32 mm strip for buttons plus a scrap for Q1-Q3, qty: 1, cost_usd: 1}
+  - {name: 30 AWG silicone wire, qty: 1, cost_usd: 3}
+  - {name: "M2 x 8 mm self-tapping countersunk screws", qty: 4, cost_usd: 1}
+
+nets:
+  VBAT:        [BT1.+, U1.BAT+, M1.+, D1.K, Q2.S, R3.1, C1.1]
+  GND:         [BT1.-, U1.BAT-, U1.GND, U2.GND, DS1.GND, DS1.EMD, DS1.EIN, SW1.B, SW2.B, SW3.B,
+                Q1.S, R2.2, Q3.S, R4.2]
+  3V3:         [U1.3V3, DS1.VIN, DS1.DISP]
+  BTN_UP:      [U1.D0, SW1.A]
+  BTN_SEL:     [U1.D1, SW2.A]
+  BTN_DOWN:    [U1.D2, SW3.A]
+  MODEM_EN:    [U1.D3, Q3.G, R4.1]
+  MODEM_GATE:  [R7.2, Q2.G, R3.2, C1.2]
+  MODEM_PULL:  [Q3.D, R7.1]
+  VMODEM:      [Q2.D, U2.VBAT]
+  MODEM_DTR:   [U1.D4, R6.1]
+  MODEM_DTR_R: [R6.2, U2.P0.06]
+  MODEM_RI:    [U1.D5, U2.P0.07]
+  UART_TX:     [U1.D6, R5.1]
+  UART_TX_R:   [R5.2, U2.P0.03]
+  UART_RX:     [U1.D7, U2.P0.02]
+  LCD_SCK:     [U1.D8, DS1.CLK]
+  LCD_CS:      [U1.D9, DS1.CS]
+  LCD_MOSI:    [U1.D10, DS1.DI]
+  HAPTIC:      [U1.NFC1, R1.1]
+  HAPTIC_G:    [R1.2, Q1.G, R2.1]
+  MOTOR_LOW:   [M1.-, Q1.D, D1.A]

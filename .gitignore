@@ -1,0 +1,11 @@
+node_modules/
+*.db
+.env
+enclosure/out/preview_*.svg
+firmware/build/
+firmware/tests/test_proto
+firmware/tests/test_model
+firmware/private.conf
+ios/*.xcodeproj
+__pycache__/
+.DS_Store

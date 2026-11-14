@@ -1,0 +1,24 @@
+# Generate the Xcode project with XcodeGen:  brew install xcodegen && xcodegen
+name: LifePager
+options:
+  bundleIdPrefix: com.example            # change to your own reverse-DNS prefix
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  LifePager:
+    type: application
+    platform: iOS
+    sources: [LifePager]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.lifepager
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_KEY_CFBundleDisplayName: Life Pager
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription: Life Pager stays connected to your pager so it can send replies and fetch voicemail without you opening the phone.
+        INFOPLIST_KEY_NSContactsUsageDescription: Optional. Names for the numbers you choose are sent to your own pager server so the pager can show who called when it is away from the phone.
+        INFOPLIST_KEY_UIBackgroundModes: bluetooth-central
