@@ -12,8 +12,8 @@
 
 #include "proto.h"
 
-#define UI_COLS 21          /* 168 px / 8 px font */
-#define UI_ROWS 9           /* 144 px / 16 px font */
+#define UI_COLS 25          /* 200 px / 8 px font */
+#define UI_ROWS 12          /* 200 px / 16 px font, 8 px spare */
 #define INBOX_MAX 12
 #define CANNED_MAX 8
 #define VM_TEXT_MAX 640     /* longer transcripts are cut on the pager; the app has the rest */

@@ -1,0 +1,140 @@
+/*
+ * Life Pager on off-the-shelf parts:
+ *   Seeed XIAO nRF52840 Plus, plugged into the Seeed XIAO ePaper Display Board EN05,
+ *   with Seeed's 1.54" 200x200 monochrome e-paper panel (SSD1681) in its 24-pin connector.
+ *
+ * EN05 wiring (fixed by the board; from Seeed_GFX2 src/board/configs/XIAO_ePaper_Board_Configs.h
+ * and the EN05 wiki, mapped to GPIOs with Zephyr's xiao_nrf52840_plus board docs):
+ *
+ *   ePaper CS     D7   P1.12        KEY1  D1  P0.03   -> UP
+ *   ePaper DC     D16  P0.31 (*)    KEY2  D2  P0.28   -> SELECT
+ *   ePaper RST    D11  P0.15        KEY3  D9  P1.14   -> DOWN
+ *   ePaper BUSY   D3   P0.29
+ *   ePaper SCK    D8   P1.13        Free for our modules:
+ *   ePaper MOSI   D10  P1.15          D0 P0.02  Grove vibration motor SIG
+ *   ePaper PWR EN D6   P1.11          D4 P0.04  UART TX -> nRF9151 kit P0.03
+ *                                     D5 P0.05  UART RX <- nRF9151 kit P0.02
+ *
+ * (*) P0.31 is also the XIAO's battery-voltage input (AIN7). hw.c borrows the pin back from the
+ *     display between refreshes to read the battery.
+ */
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	chosen {
+		zephyr,display = &epd;
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		btn_up: btn_up {
+			gpios = <&gpio0 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_UP>;
+		};
+		btn_sel: btn_sel {
+			gpios = <&gpio0 28 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_ENTER>;
+		};
+		btn_down: btn_down {
+			gpios = <&gpio1 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_DOWN>;
+		};
+	};
+
+	mipi_dbi_epd {
+		compatible = "zephyr,mipi-dbi-spi";
+		spi-dev = <&spi3>;
+		dc-gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+		write-only;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		epd: ssd16xxfb@0 {
+			compatible = "solomon,ssd1681";
+			reg = <0>;
+			mipi-max-frequency = <4000000>;
+			width = <200>;
+			height = <200>;
+			busy-gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
+			tssv = <0x80>;
+
+			full {
+				border-waveform = <0x05>;
+			};
+
+			partial {
+				border-waveform = <0x3c>;
+			};
+		};
+	};
+
+	zephyr,user {
+		haptic-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;      /* Grove vibration motor, active high */
+		epd-dc-gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>;     /* same pin as dc-gpios: battery read */
+		vbat-en-gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+		charge-fast-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+		io-channels = <&adc 7>;
+	};
+};
+
+/* Panel power switch on the EN05. Held on: the SSD1681 sleeps between refreshes itself. */
+&gpio1 {
+	epd_power {
+		gpio-hog;
+		gpios = <11 GPIO_ACTIVE_HIGH>;
+		output-high;
+	};
+};
+
+&pinctrl {
+	epd_spi_default: epd_spi_default {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 13)>, <NRF_PSEL(SPIM_MOSI, 1, 15)>;
+		};
+	};
+	epd_spi_sleep: epd_spi_sleep {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 13)>, <NRF_PSEL(SPIM_MOSI, 1, 15)>;
+			low-power-enable;
+		};
+	};
+	modem_uart_default: modem_uart_default {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 4)>;
+		};
+		group2 {
+			psels = <NRF_PSEL(UART_RX, 0, 5)>;
+			bias-pull-up;
+		};
+	};
+	modem_uart_sleep: modem_uart_sleep {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 4)>, <NRF_PSEL(UART_RX, 0, 5)>;
+			low-power-enable;
+		};
+	};
+};
+
+/* D9 is a button on the EN05, so the display SPI has no MISO */
+&spi3 {
+	status = "okay";
+	pinctrl-0 = <&epd_spi_default>;
+	pinctrl-1 = <&epd_spi_sleep>;
+	pinctrl-names = "default", "sleep";
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+};
+
+/* uart0 moves from D6/D7 (taken by the EN05) to D4/D5 for the nRF9151 kit */
+&uart0 {
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&modem_uart_default>;
+	pinctrl-1 = <&modem_uart_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+/* D4/D5 would otherwise be I2C */
+&i2c1 {
+	status = "disabled";
+};

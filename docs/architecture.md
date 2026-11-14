@@ -155,7 +155,7 @@ the app is not running and no backend exists.
   sync them. All on infrastructure you control; nothing is shared with anyone else.
 - **Known gap**: the MQTT password is compiled into the firmware and the XIAO's debug port is
   open. Someone with the pager and a debugger could read it. Acceptable for a personal build;
-  Rev B should enable readback protection.
+  A later firmware revision should enable readback protection.
 
 ## Failure behaviour
 
@@ -169,8 +169,11 @@ the app is not running and no backend exists.
 
 ## Roadmap
 
-1. **Rev A** (this repository): module-based hardware, printed case.
+1. **Rev A** (this repository): ready-made modules (XIAO nRF52840 Plus on Seeed's EN05 e-paper
+   board, Grove vibration motor, optional nRF9151 Connect Kit) in a printed case. No custom
+   circuit.
 2. Measure real power figures; tune eDRX and keep-alive per carrier.
 3. Firmware update over Bluetooth (MCUboot + mcumgr) so the case never needs opening.
-4. **Rev B**: single custom PCB, about 70 x 40 x 10 mm, readback protection, proper fuel gauge.
+4. Smaller case: switch to a ready-made board that integrates more (for example a future
+   all-in-one nRF52 e-paper board with a vibration motor), still without designing a circuit.
 5. Optional: short audio playback on the pager.

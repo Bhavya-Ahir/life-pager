@@ -3,14 +3,15 @@
  * Connect Kit, so that it talks to the pager's XIAO instead of the kit's USB bridge.
  * Keep in step with hardware/netlist.yaml (U2).
  *
- *   P0.02  UART TX  -> XIAO D7 (RX)
- *   P0.03  UART RX  <- XIAO D6 (TX) through 1k
- *   P0.06  DTR in   <- XIAO D4 through 1k   (low = host wants the UART awake)
- *   P0.07  RI out   -> XIAO D5              (pulses when the modem has data for a sleeping host)
+ *   P0.02  UART TX  -> XIAO D5 (RX)
+ *   P0.03  UART RX  <- XIAO D4 (TX)
  *
- * VERIFY: node labels and the DTR/RI property names differ between Serial Modem releases.
- * Start from the `external-mcu` overlay that ships with the version you build and change only
- * the pin numbers to the ones above.
+ * Only two signal wires: the EN05 leaves no spare pin for DTR / RI or a power switch, so the modem
+ * stays powered and the pager idles it with AT+CFUN=0.
+ *
+ * VERIFY: node labels differ between Serial Modem releases. Start from the `external-mcu` overlay
+ * that ships with the version you build, change only the pin numbers to the ones above, and turn
+ * off its DTR/RI options.
  */
 &pinctrl {
 	pager_uart_default: pager_uart_default {

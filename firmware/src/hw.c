@@ -1,4 +1,4 @@
-/* Buttons, vibration motor, battery gauge and the Sharp memory LCD. */
+/* Buttons (on the EN05), Grove vibration motor, battery gauge and the 1.54" e-paper panel. */
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/display/cfb.h>
@@ -20,6 +20,7 @@ LOG_MODULE_DECLARE(pager);
 static const struct gpio_dt_spec haptic_pin = GPIO_DT_SPEC_GET(USER, haptic_gpios);
 static const struct gpio_dt_spec vbat_en = GPIO_DT_SPEC_GET(USER, vbat_en_gpios);
 static const struct gpio_dt_spec charge_fast = GPIO_DT_SPEC_GET(USER, charge_fast_gpios);
+static const struct gpio_dt_spec epd_dc = GPIO_DT_SPEC_GET(USER, epd_dc_gpios);
 static const struct adc_dt_spec vbat_adc = ADC_DT_SPEC_GET(USER);
 static const struct device *const display = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 
@@ -98,14 +99,21 @@ uint8_t hw_battery_pct(void)
 	struct adc_sequence seq = { .buffer = &raw, .buffer_size = sizeof(raw) };
 	int32_t mv;
 
+	int err;
+
+	/* On the EN05 the battery-sense pin P0.31 doubles as the display's DC line. The display
+	 * is only touched from the main thread, same as this function, so it is idle here: release
+	 * the pin, measure, and hand it back. The driver sets DC before every byte it sends. */
+	gpio_pin_configure_dt(&epd_dc, GPIO_DISCONNECTED);
 	gpio_pin_set_dt(&vbat_en, 1);
 	k_msleep(2);
 	adc_sequence_init_dt(&vbat_adc, &seq);
-	if (adc_read_dt(&vbat_adc, &seq) != 0) {
-		gpio_pin_set_dt(&vbat_en, 0);
+	err = adc_read_dt(&vbat_adc, &seq);
+	gpio_pin_set_dt(&vbat_en, 0);
+	gpio_pin_configure_dt(&epd_dc, GPIO_OUTPUT_INACTIVE);
+	if (err != 0) {
 		return 0;
 	}
-	gpio_pin_set_dt(&vbat_en, 0);
 	mv = raw;
 	adc_raw_to_millivolts_dt(&vbat_adc, &mv);
 	mv = mv * (1000 + 510) / 510;
@@ -127,6 +135,10 @@ void hw_draw(const struct pager *p)
 	char rows[UI_ROWS][UI_COLS + 1];
 	int invert;
 
+	/* E-paper: the SSD1681 keeps the image with no power. The ssd16xx driver does a full refresh
+	 * on the first write and partial refreshes (about 0.3 s, no flash) afterwards because a
+	 * `partial` profile is set in the overlay. VERIFY on hardware whether ghosting builds up; if
+	 * it does, re-initialise the display every few dozen updates to force a full refresh. */
 	pager_render(p, rows, &invert);
 	cfb_framebuffer_clear(display, false);
 	for (int r = 0; r < UI_ROWS; r++) {

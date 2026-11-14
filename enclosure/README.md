@@ -1,7 +1,7 @@
 # Enclosure
 
-Parametric model in [CadQuery](https://cadquery.readthedocs.io) - one Python file, every
-dimension a named constant.
+Parametric model in [CadQuery](https://cadquery.readthedocs.io): one Python file, every
+dimension a named constant. Two variants come from the same file.
 
 ```bash
 pip install cadquery
@@ -11,61 +11,63 @@ pip install cadquery
 python3 enclosure/pager.py
 ```
 
-That regenerates `out/*.stl` (print these), `out/*.step` (open in Fusion, FreeCAD, Onshape),
-`out/assembly.step` (printed parts plus keep-out blocks for the electronics) and prints an
-interference report. The script exits non-zero if any two solids overlap.
+```bash
+python3 enclosure/pager.py --lte
+```
+
+| Variant | Size | Output folder |
+|---|---|---|
+| Bluetooth only | 107 x 47 x 14 mm | `out/` |
+| With the nRF9151 kit | 110 x 47 x 18.5 mm | `out-lte/` |
+
+Each run writes STL files (print these), STEP files (open in Fusion, FreeCAD, Onshape),
+`assembly.step` (printed parts plus keep-out blocks for every module) and an interference
+report. The script exits non-zero if any two solids overlap.
 
 | | |
 |---|---|
-| ![front](../docs/img/enclosure_front.png) | ![back](../docs/img/enclosure_back.png) |
-| ![inside](../docs/img/enclosure_inside.png) | ![tray](../docs/img/enclosure_tray.png) |
+| ![front](../docs/img/enclosure_front.png) | ![inside](../docs/img/enclosure_inside.png) |
 
-Bottom left is the shell seen from the back with the electronics in place: button strip and
-XIAO at one end, battery and nRF9151 board side by side over the display.
+Right picture: the shell from the back with the modules in place. From the right: display
+panel with the EN05 behind it, battery, Grove vibration motor.
 
 ## Parts
 
 | File | Qty | Print orientation | Notes |
 |---|---|---|---|
-| `shell.stl` | 1 | face down | The face is the bed surface - a textured PEI sheet gives the best finish. No supports. |
-| `tray.stl` | 1 | flat deck down | Needs supports under the raised deck, or split at the step and glue. |
-| `back_plate.stl` | 1 | outside face down | |
-| `button_cap.stl` | 3 | flange down | |
+| `shell.stl` | 1 | face down | The face is the bed surface: a textured PEI sheet gives the best finish. No supports. |
+| `back_cover.stl` | 1 | outside face down | Has pads that hold the modules in place. |
+| `button_cap.stl` | 3 | flange down | Pushes the EN05's side buttons through the top wall. |
 
-0.2 mm layers, 3 perimeters, PETG or PLA. Fasteners: 4x M2 x 8 mm self-tapping countersunk
-screws (for heat-set inserts set `SCREW_PILOT_D = 3.2`).
+0.2 mm layers, 3 perimeters, PETG or PLA. Fasteners: 4x M2 x 6 mm self-tapping screws.
 
-## How it goes together (face down on the desk)
+## Assembly (shell face down on the desk)
 
-1. Drop the three button caps into their holes.
-2. Display breakout, glass down, between its four corner brackets.
-3. Button strip onto its rails with the switches facing the caps; XIAO onto its rails with
-   USB-C in the wall opening.
-4. Tray on top. It clamps the display and covers the button strip and XIAO.
-5. nRF9151 board and battery on the tray's lower deck; vibration motor and LTE antenna stuck
-   to the inside of the back plate.
-6. Back plate, four screws.
+1. Stick the e-paper panel, display side down, into its pocket behind the window with thin
+   double-sided tape round the edge (not over the active area).
+2. Plug the panel's ribbon into the EN05, then lay the EN05 on its two rails, XIAO side facing
+   the panel, USB-C towards the bottom wall opening.
+3. Drop the three button caps into the top wall holes from inside.
+4. Battery and Grove motor into their bays. Route the battery lead to the EN05.
+5. *(LTE variant)* nRF9151 kit over the battery and motor, antenna taped to the inside of the
+   back cover.
+6. Back cover, four screws.
 
 ## Measure before you print the final copy
 
-The model was built from published dimensions, not from parts in hand. Check these with
-calipers and edit the constants at the top of `pager.py`:
+The panel outline (31.8 x 37.32 x 1.0 mm) is from GoodDisplay's datasheet. **The EN05's outline,
+heights and button positions are not published in anything I could read, so they are
+estimates.** Measure your board with calipers and edit these constants at the top of `pager.py`:
 
 | Constant | What to measure |
 |---|---|
-| `DISP_PCB`, `DISP_T` | display breakout outline and total thickness |
-| `WIN_OFF` | where the glass's active area sits relative to the board centre |
-| `KIT` | nRF9151 board, especially its height with the SIM fitted |
-| `BATT` | your actual cell |
-| `XIAO_Z` / `USB_Z` | height of the USB-C receptacle above the XIAO's underside |
-| `SW_H` | switch height from board to actuator tip |
+| `EN05` | board length, width, PCB thickness |
+| `EN05_FRONT_H`, `EN05_BACK_H` | tallest part on each side (the XIAO and its USB-C on one side) |
+| `EN05_BTN_X`, `EN05_BTN_Z` | where the three side buttons sit along the edge, and their height |
+| `EN05_SW_X` | position of the power slide switch |
+| `USB_X`, `USB_Z` | position of the XIAO's USB-C |
+| `ACTIVE_OFF_Y` | offset of the panel's visible area from the panel's centre |
+| `BATT` | your actual battery |
 
-Print the shell once in draft quality as a fit check before committing to a slow, pretty one.
-
-## Design notes
-
-- The display window is a plain opening with a bevel. For dust protection glue a 28 x 24 mm
-  piece of 0.5 mm clear PETG behind it and add its thickness to `FACE`-side clearance
-  (`DISP_TOP_Z`).
-- Rev A is sized by off-the-shelf boards. A custom PCB (Rev B, see the architecture doc)
-  would bring it to roughly 70 x 40 x 10 mm.
+If your EN05's buttons are on a different edge than assumed, move the hole loop in
+`make_shell()` to that wall. Print the shell once in draft quality as a fit check first.

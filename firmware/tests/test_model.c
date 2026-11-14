@@ -30,9 +30,11 @@ static int screen_has(struct pager *p, const char *text)
 static void show(struct pager *p, const char *title)
 {
 	pager_render(p, rows, &inv);
-	printf("+- %-19s-+\n", title);
-	for (int r = 0; r < UI_ROWS; r++) printf("|%c%-21s|\n", r == inv ? '>' : ' ', rows[r]);
-	printf("+----------------------+\n");
+	printf("+- %-*s-+\n", UI_COLS - 2, title);
+	for (int r = 0; r < UI_ROWS; r++) printf("|%c%-*s|\n", r == inv ? '>' : ' ', UI_COLS, rows[r]);
+	printf("+");
+	for (int c = 0; c < UI_COLS + 1; c++) printf("-");
+	printf("+\n");
 }
 
 static struct proto_msg call(uint32_t ev, uint32_t ts, const char *num, const char *name)

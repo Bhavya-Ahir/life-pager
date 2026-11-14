@@ -1,7 +1,12 @@
 /*
- * LTE-M away link: an nRF9151 running Nordic's Serial Modem application, driven with AT
- * commands over uart0. MQTT runs inside the modem; payloads are protocol frames as hex text
- * (AT command lines are text, and the frames are tiny, so hex is the robust choice).
+ * LTE-M away link: an nRF9151 Connect Kit running Nordic's Serial Modem application, driven with
+ * AT commands over uart0 (D4/D5). MQTT runs inside the modem; payloads are protocol frames as hex
+ * text (AT command lines are text, and the frames are tiny, so hex is the robust choice).
+ *
+ * Power: the kit is wired with three wires only (TX, RX, GND) and powered from the pager's
+ * battery, so there is no power switch. "Off" means radio off (AT+CFUN=0) and our UART receiver
+ * disabled. Measure the kit's draw in that state - it decides near-phone battery life when the
+ * kit is fitted (see hardware/README.md).
  *
  * The AT#X... commands below follow the Serial LTE Modem / Serial Modem MQTT client reference.
  * VERIFY them against the AT command reference of the Serial Modem version you flash - Nordic
@@ -12,7 +17,6 @@
 #include <string.h>
 
 #include <zephyr/device.h>
-#include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -21,7 +25,6 @@
 
 LOG_MODULE_DECLARE(pager);
 
-#define USER DT_PATH(zephyr_user)
 #define LINE_MAX 420            /* a 180-byte frame as hex plus slack */
 #define TOPIC_UP "pager/" CONFIG_PAGER_ID "/up"
 #define TOPIC_DOWN "pager/" CONFIG_PAGER_ID "/down"
@@ -29,8 +32,6 @@ LOG_MODULE_DECLARE(pager);
 #define KEEPALIVE_S 900
 
 static const struct device *const uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
-static const struct gpio_dt_spec pin_en = GPIO_DT_SPEC_GET(USER, modem_en_gpios);
-static const struct gpio_dt_spec pin_dtr = GPIO_DT_SPEC_GET(USER, modem_dtr_gpios);
 
 K_MSGQ_DEFINE(line_q, LINE_MAX, 4, 1);
 static K_SEM_DEFINE(wake, 0, 1);
@@ -187,14 +188,9 @@ static int wait_for(const char *a, const char *b, int timeout_s)
 static void power(bool on)
 {
 	if (on) {
-		gpio_pin_configure_dt(&pin_dtr, GPIO_OUTPUT_ACTIVE);
-		gpio_pin_set_dt(&pin_en, 1);
 		uart_irq_rx_enable(uart);
 	} else {
 		uart_irq_rx_disable(uart);
-		/* Do not back-power the modem through its I/O pins while its supply is off */
-		gpio_pin_configure_dt(&pin_dtr, GPIO_DISCONNECTED);
-		gpio_pin_set_dt(&pin_en, 0);
 	}
 }
 
@@ -203,7 +199,6 @@ static int bring_up(void)
 	char cmd[200];
 
 	power(true);
-	(void)wait_for("Ready", NULL, 8);
 	if (at_cmd("AT", NULL, 3) != 0) {
 		return -ENODEV;
 	}
@@ -326,8 +321,6 @@ int modem_init(void)
 	if (!device_is_ready(uart)) {
 		return -ENODEV;
 	}
-	gpio_pin_configure_dt(&pin_en, GPIO_OUTPUT_INACTIVE);
-	gpio_pin_configure_dt(&pin_dtr, GPIO_DISCONNECTED);
 	uart_irq_callback_user_data_set(uart, uart_isr, NULL);
 	return 0;
 }

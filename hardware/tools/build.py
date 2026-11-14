@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Check hardware/netlist.yaml and regenerate hardware/bom.csv and hardware/schematic.svg.
+"""Check hardware/netlist.yaml and regenerate hardware/bom.csv and hardware/wiring.svg.
 
-The schematic is drawn in net-label style: each part is a box, each pin carries the name of
-the net it joins. Two pins with the same label are connected.
+The wiring diagram is drawn in net-label style: each module is a box, each connection point
+carries the name of the wire or plug it joins. Two points with the same label are connected.
+Labels starting with PLUG_ are plug-in connections; the others are wires.
 """
 import csv
 import html
@@ -49,12 +50,10 @@ def check(d):
             node = f"{ref}.{pin}"
             if node not in pin_net and str(pin) not in [str(p) for p in part.get("nc", [])]:
                 errors.append(f"{node} is unconnected and not declared nc")
-    # design rules specific to this board
-    gpio_nets = [n for n, nodes in d["nets"].items() if any(x.startswith("U1.D") for x in nodes)]
-    for net in gpio_nets:
-        drivers = [x for x in d["nets"][net] if x.startswith("U1.")]
-        if len(drivers) != 1:
-            errors.append(f"net {net}: more than one U1 GPIO on the same net")
+    # every connection must touch a ready-made module - there is no custom board to land on
+    for net, nodes in d["nets"].items():
+        if len(nodes) > 3:
+            errors.append(f"net {net}: {len(nodes)} ends - a wire should join at most three points")
     return errors, pin_net
 
 
@@ -75,12 +74,12 @@ def write_bom(d):
     return total
 
 
-POWER = {"VBAT": "#b3261e", "VMODEM": "#b3261e", "3V3": "#b3261e", "GND": "#3b5b92"}
+POWER = {"VBAT_MODEM": "#b3261e", "3V3": "#b3261e", "GND": "#3b5b92"}
 LAYOUT = [  # columns of part refs
-    ["BT1", "U1"],
-    ["DS1", "SW1", "SW2", "SW3", "R5", "R6"],
-    ["U2", "Q2", "Q3", "R3", "R4", "R7", "C1"],
-    ["M1", "Q1", "D1", "R1", "R2"],
+    ["U1", "BT1"],
+    ["A1", "DS1", "W2"],
+    ["M1", "W1"],
+    ["U2"],
 ]
 
 
@@ -107,7 +106,7 @@ def write_svg(d, pin_net):
                 if net is None:
                     out.append(f'<text x="{x + box_w + 8}" y="{py + 4}" class="nc">nc</text>')
                     continue
-                color = POWER.get(net, "#1b6e4b")
+                color = POWER.get(net, "#7a7a7a" if net.startswith("PLUG_") else "#1b6e4b")
                 out.append(f'<line x1="{x + box_w}" y1="{py}" x2="{x + box_w + 22}" y2="{py}" '
                            f'stroke="{color}" stroke-width="1.6"/>')
                 out.append(f'<text x="{x + box_w + 27}" y="{py + 4}" class="net" fill="{color}">'
@@ -126,10 +125,10 @@ def write_svg(d, pin_net):
              ".note{font:11.5px system-ui,sans-serif;fill:#444}")
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" '
            f'height="{height}"><style>{style}</style><rect width="100%" height="100%" fill="#fff"/>'
-           f'<text x="30" y="26" class="title">Life Pager Rev A - schematic (net-label style)</text>'
-           f'<text x="30" y="42" class="note">Pins that share a label are wired together. '
-           f'Generated from netlist.yaml - do not edit by hand.</text>' + "".join(out) + "</svg>")
-    with open(os.path.join(HW, "schematic.svg"), "w") as f:
+           f'<text x="30" y="26" class="title">Life Pager Rev A - wiring between ready-made modules</text>'
+           f'<text x="30" y="42" class="note">Points that share a label are connected. Grey PLUG_ labels plug in; '
+           f'green and red labels are wires. No custom circuit. Generated from netlist.yaml.</text>' + "".join(out) + "</svg>")
+    with open(os.path.join(HW, "wiring.svg"), "w") as f:
         f.write(svg)
 
 

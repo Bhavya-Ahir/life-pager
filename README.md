@@ -9,7 +9,8 @@ somewhere else.
 
 ![Front of the enclosure](docs/img/enclosure_front.png)
 
-102 x 50 x 15.6 mm. Always-on reflective display, three buttons, USB-C, vibration only.
+107 x 47 x 14 mm. Always-on e-paper display, three buttons, USB-C, vibration only. Built
+entirely from ready-made boards: no custom circuit to design, and the only soldering is a few wires.
 
 ## How it works in one picture
 
@@ -43,8 +44,8 @@ texts from your own number), is in [docs/architecture.md](docs/architecture.md).
 | Folder | Contents | State |
 |---|---|---|
 | [`docs/`](docs) | Architecture, wire protocol, build guide | Complete |
-| [`hardware/`](hardware) | Circuit as a checked netlist, generated schematic and BOM, power budget | Design complete; **not yet built** |
-| [`enclosure/`](enclosure) | Parametric CadQuery model, STL + STEP for all four printed parts | Generated, interference-checked; **not yet printed** |
+| [`hardware/`](hardware) | Ready-made modules and the few wires between them: checked wiring list, diagram, parts list, power budget | Design complete; **not yet built** |
+| [`enclosure/`](enclosure) | Parametric CadQuery model, STL + STEP for both variants (with and without LTE) | Generated, interference-checked; **board dimensions estimated, not yet printed** |
 | [`firmware/`](firmware) | Zephyr / nRF Connect SDK app | Protocol + UI logic host-tested; hardware drivers **not yet compiled** |
 | [`backend/`](backend) | Node service: Twilio voicemail, SMS replies, pager sync | 15 passing tests |
 | [`ios/`](ios) | SwiftUI companion app | Written; **not yet compiled** |
@@ -60,12 +61,13 @@ pin that must be measured first.
 
 | Stage | You get | Needs |
 |---|---|---|
-| 1. Bluetooth pager | Call alerts with caller name, decline from the pager | XIAO nRF52840, display, buttons, motor, battery, printed case |
+| 1. Bluetooth pager | Call alerts with caller name, decline from the pager | XIAO nRF52840 Plus, Seeed EN05 e-paper board, 1.54" panel, Grove vibration motor, battery, printed case |
 | 2. Replies + voicemail | Preset text replies, voicemail transcripts on the pager, audio in the app | + Twilio number, backend, iPhone app, call forwarding |
-| 3. Away mode | All of the above with the phone left at home | + nRF9151 board, SIM, MQTT broker |
+| 3. Away mode | All of the above with the phone left at home | + nRF9151 Connect Kit (3 wires + battery lead), SIM, MQTT broker |
 
-Parts come to roughly $105 (estimate, [hardware/bom.csv](hardware/bom.csv)); running costs
-are a few dollars a month for the Twilio number and SIM.
+Parts come to roughly $46 for stages 1-2 and $107 with away mode (estimates,
+[hardware/bom.csv](hardware/bom.csv)). The only soldering is three wires for the vibration
+motor (six with away mode). Running costs are a few dollars a month for the Twilio number and SIM.
 
 ## Honest limits
 

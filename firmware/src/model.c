@@ -534,10 +534,10 @@ void pager_render(const struct pager *p, char rows[UI_ROWS][UI_COLS + 1], int *i
 	snprintf(status, sizeof(status), "%s %u%%", p->link_up ? link_name[p->link ? 1 : 0] : "--",
 		 p->batt_pct);
 	if (unix_now(p)) {
-		put(rows, 0, "%-15s %02u:%02u", status, (unsigned)((local / 3600) % 24),
+		put(rows, 0, "%-19s %02u:%02u", status, (unsigned)((local / 3600) % 24),
 		    (unsigned)((local / 60) % 60));
 	} else {
-		put(rows, 0, "%-15s --:--", status);
+		put(rows, 0, "%-19s --:--", status);
 	}
 
 	switch (p->screen) {
@@ -546,16 +546,16 @@ void pager_render(const struct pager *p, char rows[UI_ROWS][UI_COLS + 1], int *i
 		else put(rows, 3, "No new voicemail");
 		if (p->inbox_count) {
 			age(p, p->inbox[0].ts, when, sizeof(when));
-			put(rows, 5, "Last: %.15s", who(&p->inbox[0]));
+			put(rows, 5, "Last: %.19s", who(&p->inbox[0]));
 			put(rows, 6, "      %s%s", when, strcmp(when, "now") && strcmp(when, "--") ? " ago" : "");
 		}
 		break;
 	case SCR_RINGING:
-		put(rows, 2, "Incoming call");
-		put(rows, 4, "%s", p->ring_who);
-		put(rows, 6, "^ Silence");
-		put(rows, 7, "o Decline + reply");
-		put(rows, 8, "v Decline");
+		put(rows, 3, "Incoming call");
+		put(rows, 5, "%s", p->ring_who);
+		put(rows, 8, "^ Silence");
+		put(rows, 9, "o Decline + reply");
+		put(rows, 10, "v Decline");
 		break;
 	case SCR_INBOX:
 		n = p->inbox_count + 1;
@@ -565,7 +565,7 @@ void pager_render(const struct pager *p, char rows[UI_ROWS][UI_COLS + 1], int *i
 				put(rows, 1 + i - first, "< Back");
 			} else {
 				age(p, p->inbox[i].ts, when, sizeof(when));
-				put(rows, 1 + i - first, "%c%-15.15s %4s",
+				put(rows, 1 + i - first, "%c%-19.19s %4s",
 				    p->inbox[i].is_vm ? (p->inbox[i].heard ? 'v' : 'V') : ' ',
 				    who(&p->inbox[i]), when);
 			}
@@ -587,7 +587,7 @@ void pager_render(const struct pager *p, char rows[UI_ROWS][UI_COLS + 1], int *i
 		}
 		break;
 	case SCR_REPLY:
-		put(rows, 1, "Reply to %.12s", p->reply_live ? p->ring_who : who(it));
+		put(rows, 1, "Reply to %.16s", p->reply_live ? p->ring_who : who(it));
 		n = p->canned_count + 1;
 		first = p->cursor >= UI_ROWS - 2 ? p->cursor - (UI_ROWS - 3) : 0;
 		for (uint8_t i = first; i < n && i - first < UI_ROWS - 2; i++) {
@@ -596,7 +596,7 @@ void pager_render(const struct pager *p, char rows[UI_ROWS][UI_COLS + 1], int *i
 		}
 		break;
 	case SCR_VMTEXT:
-		put(rows, 1, "%.14s %us", who(it), it->duration_s);
+		put(rows, 1, "%.18s %us", who(it), it->duration_s);
 		if (p->vm_have == 0) put(rows, 3, p->vm_total ? "Loading..." : "(no transcript)");
 		else wrapped(rows, 2, UI_ROWS - 2, p->vm_text, p->top);
 		break;

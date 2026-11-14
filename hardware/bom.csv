@@ -1,27 +1,14 @@
 ref,qty,part,role,source,unit_cost_usd_estimate
-U1,1,Seeed Studio XIAO nRF52840 (non-Sense),"MCU, Bluetooth LE, USB-C, LiPo charger (BQ25101)",Seeed 102010448,9.9
-U2,1,Makerdiary nRF9151 Connect Kit,LTE-M / NB-IoT modem running Nordic Serial Modem firmware,makerdiary.com,39.9
-DS1,1,"Adafruit Sharp Memory Display 1.3"" 168x144 (LS013B7DH05)",always-on reflective display,Adafruit 3502,24.95
-BT1,1,"LiPo 3.7 V 602050 with protection circuit, about 650 mAh",battery,generic,7.0
-SW1,1,Tact switch 6x6x4.3 mm THT,UP,generic,0.1
-SW2,1,Tact switch 6x6x4.3 mm THT,SELECT,generic,0.1
-SW3,1,Tact switch 6x6x4.3 mm THT,DOWN,generic,0.1
-M1,1,Coin vibration motor 10x2.7 mm 3 V,haptic alert,generic,1.0
-Q1,1,AO3400A N-MOSFET SOT-23,motor low-side switch,generic,0.1
-D1,1,1N5819 Schottky,motor flyback,generic,0.05
-R1,1,100R resistor,Q1 gate series,generic,0.01
-R2,1,100k resistor,Q1 gate pull-down,generic,0.01
-Q2,1,AO3401A P-MOSFET SOT-23,modem high-side power switch,generic,0.1
-Q3,1,2N7002 N-MOSFET SOT-23,level shift for Q2 gate,generic,0.05
-R3,1,100k resistor,Q2 gate pull-up (modem off by default),generic,0.01
-R4,1,100k resistor,Q3 gate pull-down,generic,0.01
-C1,1,100n ceramic capacitor,Q2 soft start (limits inrush into the kit),generic,0.02
-R7,1,10k resistor,Q2 gate series (with C1 gives ~1 ms turn-on ramp),generic,0.01
-R5,1,1k resistor,series protection on UART TX into modem,generic,0.01
-R6,1,1k resistor,series protection on DTR into modem,generic,0.01
--,1,LTE flex antenna with U.FL (ships with the Connect Kit),,,0
--,1,Nano SIM with LTE-M data (1NCE or Hologram),,,15
--,1,Perfboard 2.54 mm - one 13x32 mm strip for buttons plus a scrap for Q1-Q3,,,1
--,1,30 AWG silicone wire,,,3
--,4,M2 x 8 mm self-tapping countersunk screws,,,1
-,,TOTAL (estimate),,,106.44
+U1,1,Seeed Studio XIAO nRF52840 Plus,MCU and Bluetooth; plugs into the EN05,seeedstudio.com,9.9
+A1,1,Seeed Studio XIAO ePaper Display Board EN05 (nRF52840),"carrier - e-paper connector, 3 side buttons, battery JST + power switch, charging",Seeed 100085486,9.9
+DS1,1,"Seeed 1.54"" monochrome e-paper 200x200 (SSD1681, GoodDisplay GDEY0154D67)",always-on display; ribbon plugs into the EN05,seeedstudio.com (or any GDEY0154D67),7.0
+M1,1,Seeed Grove - Vibration Motor,"silent alert; on-board driver, logic-level input (HIGH = vibrate)",Seeed 105020003,4.5
+W1,1,Grove to female jumper cable (4-pin),connects M1 to the XIAO pins,seeedstudio.com (4-pin female jumper to Grove),2.9
+BT1,1,"LiPo 3.7 V about 1000 mAh, 803040 size, JST-PH 2.0 plug, with protection circuit",battery,generic,9.0
+U2,1,"Makerdiary nRF9151 Connect Kit (optional, for away mode)",LTE-M modem running Nordic's stock Serial Modem firmware,makerdiary.com,39.9
+W2,1,JST-PH 2.0 Y splitter cable (1 plug to 2 sockets),shares BT1 between the EN05 and the nRF9151 kit (only with U2),generic,3.0
+-,1,LTE flex antenna with U.FL (ships with the Connect Kit; only with U2),,,0
+-,1,Nano SIM with LTE-M data,,,15
+-,4,M2 x 6 mm self-tapping screws,,,1
+-,1,Thin double-sided tape for the display panel and modules,,,2
+,,TOTAL (estimate),,,107.1
