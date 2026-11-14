@@ -87,7 +87,7 @@ for the display and button wires.
 |---|---|
 | Pager pairs but never shows calls | "Share System Notifications" is off for the pager in iOS Bluetooth settings |
 | Display blank | CS polarity (it is active high), or the breakout's pin order differs from the netlist |
-| Status never shows `BT` | The app has not subscribed: open it once; check the server URL/token do not matter for this - the bridge comes up even without a server |
+| Status never shows `BT` | The app has not subscribed to the pager yet: open it once. This does not depend on the server settings. |
 | "Reply queued" and nothing is sent | Forwarding is not active, so the declined call never reached Twilio |
 | Texts not delivered (US) | A2P 10DLC registration missing or pending |
 | Modem never registers | SIM not activated, antenna not connected, or no LTE-M coverage from that SIM's partner network |
